@@ -1,33 +1,54 @@
 #include <Arduino.h>
+#include <cstdint>
 
-unsigned int counter = 0;
-bool mode = false;
-byte speed = 0;
-unsigned int delay = 1000;
+#define BASE_DELAY 1000
+
+void changeMode();
+void changeSpeed();
+void computeDelay();
+
+namespace global {
+  unsigned int counter = 0;
+  bool mode = false;
+  uint8_t speed = 0;
+  unsigned int delay = 1000;
+  unsigned int pines[5] = {PB5, PB6, PB7, PB8, PB9};
+  bool led_status = false;
+}
 
 void setup() {
-  for(int i = 5; i < 15; i++){
-    pinMode(PB0+i, OUTPUT);
+  for(int i = 0; i < 5; i++){
+    pinMode(global::pines[i], OUTPUT);
   }
   pinMode(PA5, INPUT);
   pinMode(PA6, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
   attachInterrupt(PA5, changeMode, RISING);
-  attachInterrupt(PA6, changeMode, RISING);
+  attachInterrupt(PA6, changeSpeed, RISING);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  for (size_t pos = 0; pos < 5; pos++) {
+    bool bit = (global::counter & (1 << pos)) >> pos;
+    digitalWrite(
+        global::pines[pos], bit
+    );
+  }
+  delay(global::delay);
+  global::counter = (!global::mode) 
+                  ? global::counter + 1 
+                  : global::counter - 1;
+  global::delay = (global::speed <= 4) ? BASE_DELAY >> global::speed : 1000;
 }
 
 void changeMode() {
-    mode = !mode;
+  global::mode = !global::mode;
 }
 
 void changeSpeed() {
-    speed = (speed <= 4) ? speed++ : 1;
+  global::speed = (global::speed <= 4) ? global::speed+1 : 1;
 }
 
-unsigned int computeDelay() {
-    delay = (speed < 4) ? delay >> speed : 1000;
+void computeDelay() {
+  global::delay = (global::speed <= 4) ? global::delay >> global::speed : 1000;
 }
