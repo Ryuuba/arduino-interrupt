@@ -5,7 +5,6 @@
 
 void changeMode();
 void changeSpeed();
-void computeDelay();
 
 namespace global {
   unsigned int counter = 0;
@@ -47,8 +46,4 @@ void changeMode() {
 
 void changeSpeed() {
   global::speed = (global::speed <= 4) ? global::speed+1 : 1;
-}
-
-void computeDelay() {
-  global::delay = (global::speed <= 4) ? global::delay >> global::speed : 1000;
 }
